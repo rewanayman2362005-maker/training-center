@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة مركز التدريب</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F5F0;
+    --surface:#FFFFFF;
+    --ink:#1B1F1C;
+    --muted:#6E7268;
+    --border:#E3E1D6;
+    --teal:#1F4B43;
+    --teal-dark:#153631;
+    --teal-tint:#E7EFEC;
+    --amber:#E1993A;
+    --amber-tint:#FBF0DE;
+    --danger:#B4472F;
+    --danger-tint:#F7E7E2;
+    --radius-s:6px;
+    --radius-m:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Tajawal',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{max-width:960px;margin:0 auto;padding:20px 16px 60px;display:none;}
+  #app.active{display:block;}
+
+  #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  #loginScreen.hidden{display:none;}
+  .login-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:28px 24px;}
+  .login-card .logo-mark{width:44px;height:44px;border-radius:10px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;margin-bottom:16px;}
+  .login-card h1{font-size:19px;font-weight:800;margin:0 0 4px;color:var(--teal-dark);}
+  .login-card .sub{font-size:13px;color:var(--muted);margin:0 0 20px;line-height:1.5;}
+  .login-card label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--muted);font-weight:500;margin-bottom:14px;}
+  .login-card input{font-family:inherit;border:1px solid var(--border);border-radius:var(--radius-s);padding:10px 12px;font-size:14.5px;color:var(--ink);background:var(--bg);}
+  .login-card input:focus{outline:2px solid var(--teal);outline-offset:1px;background:#fff;}
+  .login-card .btn{width:100%;padding:11px;font-size:14.5px;margin-top:4px;}
+  .login-error{color:var(--danger);font-size:12.5px;margin-top:10px;min-height:16px;}
+
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 2px 22px;border-bottom:2px solid var(--teal);margin-bottom:22px;}
+  header.top .brand{display:flex;flex-direction:column;gap:2px;}
+  header.top h1{font-size:22px;font-weight:800;margin:0;color:var(--teal-dark);letter-spacing:-0.2px;}
+  header.top .sub{font-size:13px;color:var(--muted);font-weight:400;}
+  header.top .right{display:flex;align-items:center;gap:10px;}
+  header.top .date{font-size:13px;color:var(--muted);font-weight:500;white-space:nowrap;}
+  header.top .logout{font-family:inherit;border:1px solid var(--border);background:var(--surface);color:var(--muted);padding:7px 13px;border-radius:999px;font-size:12.5px;font-weight:600;cursor:pointer;}
+  header.top .logout:hover{border-color:var(--danger);color:var(--danger);}
+
+  nav.tabs{display:flex;gap:6px;margin-bottom:22px;overflow-x:auto;padding-bottom:2px;}
+  nav.tabs button{font-family:inherit;border:1px solid var(--border);background:var(--surface);color:var(--muted);padding:9px 16px;border-radius:999px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s ease, color .15s ease, border-color .15s ease;}
+  nav.tabs button.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700;}
+  nav.tabs button:not(.active):hover{border-color:var(--teal);color:var(--teal-dark);}
+
+  section.view{display:none;}
+  section.view.active{display:block;}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:16px 14px;}
+  .stat-card .num{font-size:28px;font-weight:800;color:var(--teal-dark);line-height:1;}
+  .stat-card .lbl{font-size:12.5px;color:var(--muted);margin-top:8px;font-weight:500;}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:18px 16px;margin-bottom:18px;}
+  .panel h2{font-size:16px;font-weight:700;margin:0 0 4px;color:var(--teal-dark);}
+  .panel .hint{font-size:12.5px;color:var(--muted);margin:0 0 14px;}
+
+  .row-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .row-actions h2{margin:0;}
+
+  .btn{font-family:inherit;border:none;border-radius:var(--radius-s);padding:9px 16px;font-size:13.5px;font-weight:700;cursor:pointer;transition:opacity .15s ease, transform .1s ease;}
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--teal);color:#fff;}
+  .btn-primary:hover{background:var(--teal-dark);}
+  .btn-ghost{background:transparent;color:var(--teal);border:1px solid var(--teal);}
+  .btn-ghost:hover{background:var(--teal-tint);}
+  .btn-text{background:transparent;color:var(--teal);border:none;font-weight:700;font-size:12.5px;padding:4px 6px;}
+  .btn-danger-text{background:transparent;color:var(--danger);border:none;font-weight:600;font-size:12.5px;padding:4px 6px;}
+  .btn-small{padding:6px 12px;font-size:12.5px;}
+
+  form.entry-form{display:none;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;padding-top:12px;border-top:1px dashed var(--border);}
+  form.entry-form.active{display:grid;}
+  form.entry-form label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted);font-weight:500;}
+  form.entry-form label.span2{grid-column:1 / -1;}
+  form.entry-form input,form.entry-form select{font-family:inherit;border:1px solid var(--border);border-radius:var(--radius-s);padding:9px 10px;font-size:14px;color:var(--ink);background:var(--bg);}
+  form.entry-form input:focus,form.entry-form select:focus{outline:2px solid var(--teal);outline-offset:1px;background:#fff;}
+  form.entry-form .form-actions{grid-column:1 / -1;display:flex;gap:8px;margin-top:4px;}
+  form.entry-form .form-mode-label{grid-column:1 / -1;font-size:12px;font-weight:700;color:var(--amber);margin-bottom:-4px;display:none;}
+  form.entry-form.editing .form-mode-label{display:block;}
+
+  .list{display:flex;flex-direction:column;gap:10px;}
+  .item-card{border:1px solid var(--border);border-radius:var(--radius-s);padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .item-main{display:flex;flex-direction:column;gap:4px;min-width:0;}
+  .item-title{font-size:14.5px;font-weight:700;color:var(--ink);}
+  .item-meta{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:2px 10px;}
+  .item-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+  .item-side .row{display:flex;gap:4px;}
+
+  .badge{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;}
+  .badge-confirmed{background:var(--teal-tint);color:var(--teal-dark);}
+  .badge-pending{background:var(--amber-tint);color:#8A5A16;}
+  .badge-cancelled{background:var(--danger-tint);color:var(--danger);}
+
+  select.status-select{font-family:inherit;font-size:12px;border:1px solid var(--border);border-radius:999px;padding:3px 8px;background:var(--surface);color:var(--ink);}
+
+  .empty{text-align:center;padding:30px 12px;color:var(--muted);font-size:13.5px;}
+  .empty .big{font-size:15px;color:var(--ink);font-weight:700;margin-bottom:4px;}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:50;}
+  .toast.show{opacity:1;}
+
+  @media (max-width:520px){
+    .stat-grid{grid-template-columns:1fr 1fr;}
+    form.entry-form{grid-template-columns:1fr;}
+    header.top{flex-direction:column;align-items:flex-start;gap:10px;}
+    header.top .right{width:100%;justify-content:space-between;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="logo-mark">مت</div>
+    <h1>تسجيل دخول الأدمن</h1>
+    <p class="sub">ادخل بيانات الأدمن للوصول للوحة إدارة مركز التدريب.</p>
+    <form id="loginForm">
+      <label>اسم المستخدم
+        <input type="text" id="loginUser" autocomplete="username" required>
+      </label>
+      <label>كلمة المرور
+        <input type="password" id="loginPass" autocomplete="current-password" required>
+      </label>
+      <button type="submit" class="btn btn-primary">دخول</button>
+      <div class="login-error" id="loginError"></div>
+    </form>
+  </div>
+</div>
+
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <h1>مركز التدريب</h1>
+      <div class="sub">إدارة الكورسات والمتدربين والحجوزات</div>
+    </div>
+    <div class="right">
+      <div class="date" id="todayLabel"></div>
+      <button class="logout" id="logoutBtn">تسجيل الخروج</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="dashboard" class="active">لوحة التحكم</button>
+    <button data-tab="courses">الكورسات</button>
+    <button data-tab="trainees">المتدربين</button>
+    <button data-tab="bookings">الحجوزات</button>
+  </nav>
+
+  <section class="view active" id="view-dashboard">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="num" id="statCourses">0</div><div class="lbl">كورس متاح</div></div>
+      <div class="stat-card"><div class="num" id="statTrainees">0</div><div class="lbl">متدرب مسجل</div></div>
+      <div class="stat-card"><div class="num" id="statBookings">0</div><div class="lbl">حجز مؤكد</div></div>
+    </div>
+    <div class="panel">
+      <h2>أحدث الحجوزات</h2>
+      <p class="hint">آخر خمس حجوزات تمت إضافتها</p>
+      <div class="list" id="recentBookingsList"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-courses">
+    <div class="panel">
+      <div class="row-actions">
+        <h2>الكورسات</h2>
+        <button class="btn btn-primary btn-small" id="toggleCourseForm">+ إضافة كورس</button>
+      </div>
+      <p class="hint">أضف الكورسات التي يقدمها المركز مع السعر والمقاعد المتاحة</p>
+      <form class="entry-form" id="courseForm">
+        <div class="form-mode-label">وضع التعديل — جاري تحديث كورس موجود</div>
+        <label class="span2">اسم الكورس
+          <input type="text" id="cName" required>
+        </label>
+        <label>المدرب
+          <input type="text" id="cInstructor">
+        </label>
+        <label>السعر (ر.س)
+          <input type="number" id="cPrice" min="0" step="1" placeholder="0">
+        </label>
+        <label>عدد المقاعد
+          <input type="number" id="cCapacity" min="1" step="1" placeholder="20">
+        </label>
+        <label>تاريخ البدء
+          <input type="date" id="cStart">
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="courseSubmitBtn">حفظ الكورس</button>
+          <button type="button" class="btn btn-ghost" id="cancelCourseForm">إلغاء</button>
+        </div>
+      </form>
+      <div class="list" id="coursesList"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-trainees">
+    <div class="panel">
+      <div class="row-actions">
+        <h2>المتدربين</h2>
+        <button class="btn btn-primary btn-small" id="toggleTraineeForm">+ إضافة متدرب</button>
+      </div>
+      <p class="hint">سجّل بيانات المتدربين لربطهم بالحجوزات لاحقًا</p>
+      <form class="entry-form" id="traineeForm">
+        <div class="form-mode-label">وضع التعديل — جاري تحديث متدرب موجود</div>
+        <label class="span2">الاسم الكامل
+          <input type="text" id="tName" required>
+        </label>
+        <label>رقم الجوال
+          <input type="text" id="tPhone" placeholder="05xxxxxxxx">
+        </label>
+        <label>البريد الإلكتروني
+          <input type="email" id="tEmail">
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="traineeSubmitBtn">حفظ المتدرب</button>
+          <button type="button" class="btn btn-ghost" id="cancelTraineeForm">إلغاء</button>
+        </div>
+      </form>
+      <div class="list" id="traineesList"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-bookings">
+    <div class="panel">
+      <div class="row-actions">
+        <h2>الحجوزات</h2>
+        <button class="btn btn-primary btn-small" id="toggleBookingForm">+ إضافة حجز</button>
+      </div>
+      <p class="hint">اربط متدربًا بكورس لإنشاء حجز جديد</p>
+      <form class="entry-form" id="bookingForm">
+        <label class="span2">المتدرب
+          <select id="bTrainee" required></select>
+        </label>
+        <label class="span2">الكورس
+          <select id="bCourse" required></select>
+        </label>
+        <label>تاريخ الحجز
+          <input type="date" id="bDate">
+        </label>
+        <label>الحالة
+          <select id="bStatus">
+            <option value="pending">قيد الانتظار</option>
+            <option value="confirmed" selected>مؤكد</option>
+            <option value="cancelled">ملغي</option>
+          </select>
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">حفظ الحجز</button>
+          <button type="button" class="btn btn-ghost" id="cancelBookingForm">إلغاء</button>
+        </div>
+      </form>
+      <div class="list" id="bookingsList"></div>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const API = '/api';
+  let courses = [];
+  let trainees = [];
+  let bookings = [];
+  let editingCourseId = null;
+  let editingTraineeId = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  function escapeHtml(str){
+    if(!str) return '';
+    return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function showToast(msg){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  function getToken(){ return localStorage.getItem('tc_token'); }
+  function setToken(token){ localStorage.setItem('tc_token', token); }
+  function clearToken(){ localStorage.removeItem('tc_token'); }
+
+  async function api(path, options={}){
+    const headers = Object.assign({'Content-Type':'application/json'}, options.headers || {});
+    const token = getToken();
+    if(token) headers['Authorization'] = 'Bearer ' + token;
+
+    const res = await fetch(API + path, { ...options, headers });
+
+    if(res.status === 401){
+      clearToken();
+      showLogin();
+      throw new Error('unauthorized');
+    }
+    if(!res.ok){
+      let msg = 'حدث خطأ غير متوقع';
+      try{ const body = await res.json(); if(body.message) msg = body.message; }catch(e){}
+      throw new Error(msg);
+    }
+    if(res.status === 204) return null;
+    return res.json();
+  }
+
+  // ================= LOGIN =================
+  const loginScreen = $('loginScreen');
+  const loginError = $('loginError');
+
+  function showLogin(){
+    $('app').classList.remove('active');
+    loginScreen.classList.remove('hidden');
+  }
+
+  function showApp(){
+    loginScreen.classList.add('hidden');
+    $('app').classList.add('active');
+  }
+
+  $('loginForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    loginError.textContent = '';
+    const username = $('loginUser').value.trim();
+    const password = $('loginPass').value;
+    try{
+      const res = await fetch(API + '/auth/login', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ username, password })
+      });
+      if(!res.ok){
+        loginError.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+        return;
+      }
+      const data = await res.json();
+      setToken(data.token);
+      $('loginForm').reset();
+      showApp();
+      loadData();
+    }catch(err){
+      loginError.textContent = 'تعذر الاتصال بالسيرفر، حاولي مرة أخرى';
+    }
+  });
+
+  $('logoutBtn').addEventListener('click', ()=>{
+    clearToken();
+    showLogin();
+  });
+
+  // ================= DATA LOAD =================
+  async function loadData(){
+    $('todayLabel').textContent = new Date().toLocaleDateString('ar-SA', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    try{
+      const [c, t, b] = await Promise.all([
+        api('/courses'),
+        api('/trainees'),
+        api('/bookings')
+      ]);
+      courses = c; trainees = t; bookings = b;
+      renderAll();
+    }catch(err){
+      if(err.message !== 'unauthorized') showToast(err.message);
+    }
+  }
+
+  // ================= TABS =================
+  document.querySelectorAll('nav.tabs button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('section.view').forEach(v=>v.classList.remove('active'));
+      btn.classList.add('active');
+      $('view-'+btn.dataset.tab).classList.add('active');
+      if(btn.dataset.tab === 'bookings') populateBookingSelects();
+    });
+  });
+
+  // ================= FORM TOGGLES =================
+  function wireToggle(btnId, formId, cancelId, resetFn){
+    $(btnId).addEventListener('click', ()=>{
+      if(resetFn) resetFn();
+      $(formId).classList.add('active');
+    });
+    $(cancelId).addEventListener('click', ()=>{
+      $(formId).classList.remove('active');
+      $(formId).classList.remove('editing');
+      $(formId).reset();
+      if(resetFn) resetFn();
+    });
+  }
+  wireToggle('toggleCourseForm','courseForm','cancelCourseForm', ()=>{ editingCourseId=null; $('courseForm').classList.remove('editing'); $('courseSubmitBtn').textContent='حفظ الكورس'; });
+  wireToggle('toggleTraineeForm','traineeForm','cancelTraineeForm', ()=>{ editingTraineeId=null; $('traineeForm').classList.remove('editing'); $('traineeSubmitBtn').textContent='حفظ المتدرب'; });
+  $('toggleBookingForm').addEventListener('click', ()=>{ $('bookingForm').classList.add('active'); populateBookingSelects(); });
+  $('cancelBookingForm').addEventListener('click', ()=>{ $('bookingForm').classList.remove('active'); $('bookingForm').reset(); });
+
+  // ================= COURSES =================
+  $('courseForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const payload = {
+      name: $('cName').value.trim(),
+      instructor: $('cInstructor').value.trim() || null,
+      price: Number($('cPrice').value) || 0,
+      capacity: Number($('cCapacity').value) || 0,
+      startDate: $('cStart').value || null
+    };
+    if(!payload.name) return;
+
+    try{
+      if(editingCourseId){
+        await api('/courses/' + editingCourseId, { method:'PUT', body: JSON.stringify(payload) });
+        showToast('تم تحديث الكورس');
+      }else{
+        await api('/courses', { method:'POST', body: JSON.stringify(payload) });
+        showToast('تم إضافة الكورس');
+      }
+      editingCourseId = null;
+      e.target.reset();
+      e.target.classList.remove('active','editing');
+      $('courseSubmitBtn').textContent = 'حفظ الكورس';
+      loadData();
+    }catch(err){ showToast(err.message); }
+  });
+
+  function startEditCourse(id){
+    const c = courses.find(x=>x.id===id);
+    if(!c) return;
+    editingCourseId = id;
+    $('cName').value = c.name || '';
+    $('cInstructor').value = c.instructor || '';
+    $('cPrice').value = c.price || '';
+    $('cCapacity').value = c.capacity || '';
+    $('cStart').value = c.startDate || '';
+    $('courseForm').classList.add('active','editing');
+    $('courseSubmitBtn').textContent = 'تحديث الكورس';
+    $('courseForm').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  async function deleteCourse(id){
+    if(!confirm('حذف هذا الكورس؟')) return;
+    try{
+      await api('/courses/' + id, { method:'DELETE' });
+      showToast('تم حذف الكورس');
+      loadData();
+    }catch(err){ showToast(err.message); }
+  }
+
+  function renderCourses(){
+    const list = $('coursesList');
+    if(courses.length === 0){
+      list.innerHTML = '<div class="empty"><div class="big">لا توجد كورسات بعد</div>أضف أول كورس ليظهر هنا</div>';
+      return;
+    }
+    list.innerHTML = courses.map(c=>{
+      const booked = bookings.filter(b=>b.courseId===c.id && b.status!=='cancelled').length;
+      const seatsInfo = c.capacity ? (booked + ' / ' + c.capacity + ' مقعد') : '';
+      return `<div class="item-card">
+        <div class="item-main">
+          <div class="item-title">${escapeHtml(c.name)}</div>
+          <div class="item-meta">
+            ${c.instructor ? '<span>المدرب: '+escapeHtml(c.instructor)+'</span>' : ''}
+            ${c.price ? '<span>'+c.price+' ر.س</span>' : ''}
+            ${c.startDate ? '<span>يبدأ '+c.startDate+'</span>' : ''}
+            ${seatsInfo ? '<span>'+seatsInfo+'</span>' : ''}
+          </div>
+        </div>
+        <div class="item-side">
+          <div class="row">
+            <button class="btn-text" data-editcourse="${c.id}">تعديل</button>
+            <button class="btn-danger-text" data-delcourse="${c.id}">حذف</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-delcourse]').forEach(b=>b.addEventListener('click', ()=>deleteCourse(Number(b.dataset.delcourse))));
+    list.querySelectorAll('[data-editcourse]').forEach(b=>b.addEventListener('click', ()=>startEditCourse(Number(b.dataset.editcourse))));
+  }
+
+  // ================= TRAINEES =================
+  $('traineeForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const payload = {
+      name: $('tName').value.trim(),
+      phone: $('tPhone').value.trim() || null,
+      email: $('tEmail').value.trim() || null
+    };
+    if(!payload.name) return;
+
+    try{
+      if(editingTraineeId){
+        await api('/trainees/' + editingTraineeId, { method:'PUT', body: JSON.stringify(payload) });
+        showToast('تم تحديث بيانات المتدرب');
+      }else{
+        await api('/trainees', { method:'POST', body: JSON.stringify(payload) });
+        showToast('تم إضافة المتدرب');
+      }
+      editingTraineeId = null;
+      e.target.reset();
+      e.target.classList.remove('active','editing');
+      $('traineeSubmitBtn').textContent = 'حفظ المتدرب';
+      loadData();
+    }catch(err){ showToast(err.message); }
+  });
+
+  function startEditTrainee(id){
+    const t = trainees.find(x=>x.id===id);
+    if(!t) return;
+    editingTraineeId = id;
+    $('tName').value = t.name || '';
+    $('tPhone').value = t.phone || '';
+    $('tEmail').value = t.email || '';
+    $('traineeForm').classList.add('active','editing');
+    $('traineeSubmitBtn').textContent = 'تحديث المتدرب';
+    $('traineeForm').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  async function deleteTrainee(id){
+    if(!confirm('حذف هذا المتدرب؟')) return;
+    try{
+      await api('/trainees/' + id, { method:'DELETE' });
+      showToast('تم حذف المتدرب');
+      loadData();
+    }catch(err){ showToast(err.message); }
+  }
+
+  function renderTrainees(){
+    const list = $('traineesList');
+    if(trainees.length === 0){
+      list.innerHTML = '<div class="empty"><div class="big">لا يوجد متدربين بعد</div>أضف أول متدرب ليظهر هنا</div>';
+      return;
+    }
+    list.innerHTML = trainees.map(t=>{
+      const count = bookings.filter(b=>b.traineeId===t.id && b.status!=='cancelled').length;
+      return `<div class="item-card">
+        <div class="item-main">
+          <div class="item-title">${escapeHtml(t.name)}</div>
+          <div class="item-meta">
+            ${t.phone ? '<span>'+escapeHtml(t.phone)+'</span>' : ''}
+            ${t.email ? '<span>'+escapeHtml(t.email)+'</span>' : ''}
+            <span>${count} حجز نشط</span>
+          </div>
+        </div>
+        <div class="item-side">
+          <div class="row">
+            <button class="btn-text" data-edittrainee="${t.id}">تعديل</button>
+            <button class="btn-danger-text" data-deltrainee="${t.id}">حذف</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-deltrainee]').forEach(b=>b.addEventListener('click', ()=>deleteTrainee(Number(b.dataset.deltrainee))));
+    list.querySelectorAll('[data-edittrainee]').forEach(b=>b.addEventListener('click', ()=>startEditTrainee(Number(b.dataset.edittrainee))));
+  }
+
+  // ================= BOOKINGS =================
+  function populateBookingSelects(){
+    const tSel = $('bTrainee');
+    const cSel = $('bCourse');
+    tSel.innerHTML = trainees.length
+      ? trainees.map(t=>`<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('')
+      : '<option value="">أضف متدربًا أولاً</option>';
+    cSel.innerHTML = courses.length
+      ? courses.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')
+      : '<option value="">أضف كورسًا أولاً</option>';
+  }
+
+  $('bookingForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const traineeId = Number($('bTrainee').value);
+    const courseId = Number($('bCourse').value);
+    if(!traineeId || !courseId) return;
+
+    const payload = {
+      traineeId,
+      courseId,
+      bookingDate: $('bDate').value || null,
+      status: $('bStatus').value
+    };
+    try{
+      await api('/bookings', { method:'POST', body: JSON.stringify(payload) });
+      showToast('تم إضافة الحجز');
+      e.target.reset();
+      e.target.classList.remove('active');
+      loadData();
+    }catch(err){ showToast(err.message); }
+  });
+
+  async function deleteBooking(id){
+    if(!confirm('حذف هذا الحجز؟')) return;
+    try{
+      await api('/bookings/' + id, { method:'DELETE' });
+      showToast('تم حذف الحجز');
+      loadData();
+    }catch(err){ showToast(err.message); }
+  }
+
+  async function updateBookingStatus(id, status){
+    try{
+      await api('/bookings/' + id + '/status', { method:'PUT', body: JSON.stringify({ status }) });
+      loadData();
+    }catch(err){ showToast(err.message); }
+  }
+
+  function statusLabel(s){ return s==='confirmed' ? 'مؤكد' : s==='pending' ? 'قيد الانتظار' : 'ملغي'; }
+  function statusBadgeClass(s){ return s==='confirmed' ? 'badge-confirmed' : s==='pending' ? 'badge-pending' : 'badge-cancelled'; }
+
+  function bookingRow(b){
+    return `<div class="item-card">
+      <div class="item-main">
+        <div class="item-title">${escapeHtml(b.traineeName)}</div>
+        <div class="item-meta">
+          <span>${escapeHtml(b.courseName)}</span>
+          ${b.bookingDate ? '<span>'+b.bookingDate+'</span>' : ''}
+        </div>
+      </div>
+      <div class="item-side">
+        <select class="status-select" data-statusfor="${b.id}">
+          <option value="pending" ${b.status==='pending'?'selected':''}>قيد الانتظار</option>
+          <option value="confirmed" ${b.status==='confirmed'?'selected':''}>مؤكد</option>
+          <option value="cancelled" ${b.status==='cancelled'?'selected':''}>ملغي</option>
+        </select>
+        <button class="btn-danger-text" data-delbooking="${b.id}">حذف</button>
+      </div>
+    </div>`;
+  }
+
+  function renderBookings(){
+    const list = $('bookingsList');
+    if(bookings.length === 0){
+      list.innerHTML = '<div class="empty"><div class="big">لا توجد حجوزات بعد</div>أضف أول حجز ليظهر هنا</div>';
+      return;
+    }
+    const sorted = [...bookings].sort((a,b)=> (b.bookingDate||'').localeCompare(a.bookingDate||''));
+    list.innerHTML = sorted.map(bookingRow).join('');
+    list.querySelectorAll('[data-delbooking]').forEach(b=>b.addEventListener('click', ()=>deleteBooking(Number(b.dataset.delbooking))));
+    list.querySelectorAll('[data-statusfor]').forEach(sel=>sel.addEventListener('change', ()=>updateBookingStatus(Number(sel.dataset.statusfor), sel.value)));
+  }
+
+  // ================= DASHBOARD =================
+  function renderDashboard(){
+    $('statCourses').textContent = courses.length;
+    $('statTrainees').textContent = trainees.length;
+    $('statBookings').textContent = bookings.filter(b=>b.status==='confirmed').length;
+
+    const recent = [...bookings].sort((a,b)=> (b.bookingDate||'').localeCompare(a.bookingDate||'')).slice(0,5);
+    const list = $('recentBookingsList');
+    if(recent.length === 0){
+      list.innerHTML = '<div class="empty"><div class="big">لا يوجد نشاط بعد</div>ستظهر أحدث الحجوزات هنا فور إضافتها</div>';
+      return;
+    }
+    list.innerHTML = recent.map(b=>`<div class="item-card">
+        <div class="item-main">
+          <div class="item-title">${escapeHtml(b.traineeName)}</div>
+          <div class="item-meta">
+            <span>${escapeHtml(b.courseName)}</span>
+            ${b.bookingDate ? '<span>'+b.bookingDate+'</span>' : ''}
+          </div>
+        </div>
+        <div class="item-side">
+          <span class="badge ${statusBadgeClass(b.status)}">${statusLabel(b.status)}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  function renderAll(){
+    renderCourses();
+    renderTrainees();
+    renderBookings();
+    renderDashboard();
+  }
+
+  // ================= INIT =================
+  if(getToken()){
+    showApp();
+    loadData();
+  }else{
+    showLogin();
+  }
+})();
+</script>
+</body>
+</html>
